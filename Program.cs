@@ -8,20 +8,20 @@ namespace BOF4Tool
 {
     public class Program
     {
+        private static string ROOT = @"D:\LocalProjects\BOF4\J\BIN";
+
         static void Main(string[] args)
         {
-            var location = @"D:\LocalProjects\BOF4\J\BIN";
+            //ExtractAllEMI();
 
-            //foreach (var path in Directory.GetFiles(location, "*.EMI", SearchOption.AllDirectories))
-            //{
-            //    var emi = EMI.Read(path);
-            //}
+            ExtractTextFile("WORLD");
+        }
 
-            //var path = Path.Combine(location, @"WORLD\AREAD000\010.80010000");
-
+        private static void ExtractTextFile(string location)
+        {
             var list = new List<TextFile>();
 
-            foreach (var path in Directory.GetFiles(Path.Combine(location, "WORLD"), "*.80010000", SearchOption.AllDirectories))
+            foreach (var path in Directory.GetFiles(Path.Combine(ROOT, location), "*.80010000", SearchOption.AllDirectories))
             {
                 using (var fs = new FileStream(path, FileMode.Open))
                 {
@@ -66,6 +66,14 @@ namespace BOF4Tool
                 }
 
                 SerializationHelper.Save(list, "world.xml");
+            }
+        }
+
+        private static void ExtractAllEMI()
+        {
+            foreach (var path in Directory.GetFiles(ROOT, "*.EMI", SearchOption.AllDirectories))
+            {
+                EMI.Read(path);
             }
         }
     }
