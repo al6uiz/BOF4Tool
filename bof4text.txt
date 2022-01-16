@@ -1,0 +1,1339 @@
+uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+Breath of Fire IV Text Hacking Guide v1.3
+Copyright 2021 by navarchos/rh (discord: procrastinator#0095)
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+
+Notes: 
+    - This file uses UTF-8 encoding to display CJK and other non-ASCII
+      characters. If you see garbled text in certain sections of the file, try 
+      changing the encoding or using a different text editor to view this
+      document.
+
+    - Some of the contents of this file were taken from my Breath of Fire III
+      text hacking guide. There's no need to read that guide before reading
+      this one, unless you want to see the differences between BoFIII and BoFIV.
+
+
+
+--------------------------------------------------------------------------------
+
+Table of Contents
+
+--------------------------------------------------------------------------------
+
+0. Glossary and terminology             -- [TERM]
+
+1. Getting started                      -- [STRT]
+    1a. File extraction
+    1b. File reinsertion
+    1c. Creating a PPF patch
+
+2. Folder and file structure            -- [FSTR]
+    2a. /BIN folder contents
+    2b. .EMI file structure
+    2c. Navigating text sections
+    2d. Editing text sections    
+
+3. Encoding                             -- [ENCD]
+    3a. ASCII Encoding
+    3b. Kanji and Kana encoding
+    3c. Symbols
+
+4. Control characters                   -- [CCHR]
+    4a. Main control characters
+    4b. Placeholders
+    4c. Text formatting
+
+5. Fonts                                -- [FONT]
+    5a. Latin characters
+    5b. Kanji and kana
+
+6. Table of kanji and kana              -- [JTBL]
+    6a. Hiragana table
+    6b. Katakana table
+    6c. Kanji table
+
+7. Changelog                            -- [CHNG]
+
+
+
+[TERM]--------------------------------------------------------------------------
+
+0. Glossary and terminology
+
+--------------------------------------------------------------------------------
+
+    - nibble                4 bits, half of a byte.
+    - uint32                Unsigned, 32-bit integer. This takes up
+                            4 bytes.
+    - uint16                Unsigned, 16-bit integer. This takes up
+                            2 bytes.
+    - char[n]               A series of n ASCII characters.
+                            Each character takes up 1 byte.
+    - Text box              A box which pops up on the screen and contains 
+                            text. May or may not have an outline and a background.
+    - Box chain             A series of text boxes which are linked together,
+                            indicated with a downwards triangle at the
+                            bottom of the box. Usually used to show the 
+                            continuation of long sentences.
+    - Timed box             A text box which appears only for a set amount
+                            of time. Timed boxes appear consecutively.
+    - Timed box chain       A series of consecutive timed boxes.
+
+
+
+[STRT]--------------------------------------------------------------------------
+
+1. Getting started
+
+--------------------------------------------------------------------------------
+
+This guide explains how to modify the in-game text for the following
+versions of Breath of Fire IV:
+    - SLPS-02728 (Japanese NTSC)
+    - SLUS-01324 (English NTSC)
+
+Some of the tools you will need:
+    - A hexadecimal editor
+    - CDMage
+    - PPFStudio
+    - Tile Molester
+
+And optionally:
+    - mkpsxiso
+    - isodump
+    - PCSX-Redux
+    - Sublime Text
+
+You can use Lameguy64's mkpsxiso and isodump instead of CDMage to extract and
+create the binary file, but using mkpsxiso will change the file size of the
+binary, rendering it unusable when making a PPF file. It's still useful as a
+tool for building a binary file quickly when testing.
+
+If you do decide to use isodump and mkpsxiso, you'll have to build isodump
+yourself, or download a release from either of these two forks:
+    
+    https://github.com/marco-calautti/isodump/releases
+    https://github.com/meunierd/isodump/releases
+
+PCSX-Redux is a good emulator for PSX debugging. You can use the built-in
+memory editor to modify text sections and other memory values in real-time,
+which is useful for making quick tests.
+
+
+            ========================================================
+                              1a. File extraction
+            ========================================================
+
+    1. Open CDMage and open BoF4's binary file.
+    2. When prompted for the image type, select M2/2353. 
+    3. The contents of the game are located in Track 1, so right click
+       on this track, and choose 'Extract Files'.
+    4. Choose a folder where you would like
+       to save the game files, and press extract. 
+    5. The contents of the track should be
+       extracted to that folder. You should see a folder called 'BIN'.
+
+
+            ========================================================
+                              1b. File reinsertion
+            ========================================================
+
+    1. Open CDMage and open BoF4's binary file just like before. 
+    2. Double click Track 1 and navigate to the file you have changed. Right
+       click on the file and choose 'Import File'. Locate and open the file
+       you've edited. Keep in mind that with CDMage, you *cannot* change the size of the file. 
+    3. Once you've imported the edited file in, right click Track 1 and choose 
+       'Extract Track'.
+    4. Click 'Default extensions' and change the extension for Mode2/2353 to
+       'bin', without the quotes. Press OK, choose the directory you want to
+       save the binary in, and press extract.
+
+
+            ========================================================
+                            1c. Creating a PPF patch
+            ========================================================
+
+    1. Open PPFStudio, and enter the location where you want to save the PPF
+       patch in the 'PPF File (Output)' section.
+    2. Open the original BoF4 binary file for the 'Original file', and open the
+       CDMage output for the 'Patched file'. This file must have the same size
+       as the original file.
+    3. Press 'Create PPF Patch' and the patch will be created in the destination
+       folder.
+
+
+
+[FSTR]--------------------------------------------------------------------------
+
+2. Folder and file structure
+
+--------------------------------------------------------------------------------
+
+            ========================================================
+                            2a. /BIN folder contents
+            ========================================================
+
+After extracting the game's binary file, you should see a folder called 'BIN'
+in the folder where you chose to extract the files. This is where the game's
+main files are located.
+This is the folder tree of 'BIN', with only the relevant folders and files for
+text hacking shown:
+
+        /BIN
+          |
+          | - /BATTLE
+                |
+                | - AB000_00.EMI
+                |
+                | - BTLEND.EMI
+                |
+                | - BTLLOSE.EMI
+                |
+                | - BTLRET.EMI
+          |
+          | - /SYSTEM
+            
+                |
+                | - CAMP.EMI
+                |
+                | - COMMU9B.EMI
+                |
+                | - DEMO.EMI
+                |
+                | - GAME.EMI
+                |
+                | - INIT.EMI
+                |
+                | - MASTER.EMI
+                |
+                | - MSHOP.EMI
+                |
+                | - RTEST.EMI
+                |
+                | - SAVE.EMI
+                |
+                | - SHOP.EMI
+                |
+                | - START.EMI
+          |          
+          | - /WORLD
+                | - AREA____.EMI
+
+
+Unlike in BoFIII, an AREA file may have several duplicates, which adds
+redundancy to area-specific texts. Boss battle files no longer contain battle
+text, they are all stored in BATTLE/.EMI. Item and ability names are stored
+separately from their data, names are stored in SYSTEM/INIT.EMI.
+In the Japanese version, each AREA file has a copy of the Kanji font. The
+font is stored in INIT.EMI. They can be viewed in Tile Molester by choosing the
+the 4bpp linear reverse-order codec, and the 2-dimensional mode.
+
+
+            ========================================================
+                            2b. .EMI file structure
+            ========================================================
+
+Credit goes to to Mr. Mouse @ forum.xentax.com for figuring out how the
+ToC works.
+
+An .EMI file is kind of a file archive - it contains various files and sections
+such as character sprites, textures, enemy data, and in-game text stitched
+together into a single file. 
+To help locate where each file/section is, a table of contents (henceforth
+'ToC') is placed at the beginning of every .EMI file. The ToC is 2048
+bytes long, and each entry in the ToC is 16 bytes. The very first entry
+is known as the ToC header.
+Here is the structure of a ToC:
+
+    ToC header:
+        - uint32              Number of files/sections in the .EMI file
+        - uint32              Unknown
+        - char[8]             Magic number ('MATH_TBL')
+
+    ToC entry:
+        - uint32              Size of section/file in bytes
+        - uint32              Type of the section/file
+        - uint32              First four bytes of the section
+        - uint16              Unknown
+        - 2F 2F               Padding
+
+All integers in the ToC are little-endian, which means that the hexadecimal
+representation of the integer must be read backwards. For example, 0e f0 00 00
+is read as 0xf00e (decimal 61454), not 0x0ef0000000 (decimal 64156073984).
+
+Here is an example of a ToC header:
+
+    0E 00 00 00 01 00 00 00 4D 41 54 48 5F 54 42 4C
+
+Where:
+    - 0E 00 00 00 is a little-endian integer, indicating how many
+      files/sections there are in the .EMI file. In this case, there
+      are 0x0e (decimal 14) files/sections.
+    - 01 00 00 00 serves an unknown purpose.
+    - 4D 41 54 48 5F 54 42 4C is the magic number for .EMI files.
+      It is the ASCII encoding of the string 'MATH_TBL'.
+
+Here is an example of a ToC entry:
+
+    6D 5F 00 00 00 00 01 80 42 02 45 02 00 00 2E 2E
+
+Where:
+    - 6D 5F 00 00 is a little-endian integer, indicating the size
+      of the file/section. In this case, the file/section is 0x6D5F
+      bytes long, or 24429 in decimal.
+    - 00 00 01 80 indicates the type of the file/section.
+    - 42 02 45 02 indicates this file/section's first four bytes
+    - 00 00 serves an unknown purpose.
+    - 2E 2E is a padding, added so that each entry is exactly 16 bytes.
+
+In AREAxxx.EMI files, text sections are identified by the code 00 00 01 80.
+To make locating text easier, read the next subsection.
+
+
+            ========================================================
+                          2c. Navigating text sections
+            ========================================================
+
+The easiest way to locate a text section in English is to use your hex editor's
+search function. Look for common English words of moderate length such as
+'your', 'the', or 'this'. The alphabetical characters used in the text section
+is encoded in ASCII, so there's no need for relative searching.
+If you are unsure where the file is located, try using Sublime Text to bulk
+search for files in the 'BIN' folder. Open Sublime Text. Then, open the 'BIN'
+folder by going to File -> Open Folder. Then, right-click on 'BIN', and select
+'Find in Folder'. A search bar will pop up at the bottom of the screen. Switch
+to RegExp mode by pressing the '.*' icon. Enter the text you are trying to
+locate, replacing any punctuations and whitespaces with a '.', and press 'Find'.
+
+To locate Japanese text sections, look for the text section in the equivalent
+English file using the method above, find the start of the text section, 
+and copy the address of the start of the text section.
+In the equivalent Japanese file, go to the address you just copied. The Japanese
+text section should be located around the same address.
+
+Like other sections and files stored in a .EMI file, text sections always begin
+at addresses divisible by 2048. The text section itself consists of two
+subsections:
+    - Pointers      This is the first subsection of the text subsection. This
+                    tells the game where each text box (chain) starts.
+    - Text          This is the subsection that stores the actual text in the
+                    game.
+
+=========
+Pointers
+=========
+
+Pointers are little-endian, 16-bit unsigned integers. The first two bytes of the
+pointer table is a little endian, 16-bit unsigned integer which determines how
+big the pointer table is, and every uint16 following that is an offset which
+tells where a certain textbox chain is stored.
+As the pointers are 2 bytes each, the size of the pointer table has to be an
+even number. The base address which is offset by the pointer's value is
+the starting address of the text section. A series of repeating uint16's equal
+to the size of the text section minus 1 marks the end of the pointer table.
+Here is an example taken from AREAD011.EMI:
+
+    00 02 00 02 5D 02 96 02
+
+The text section starts at 0xa8800, which is the base address of the
+text section. The first two bytes tell us that the pointer table is 0x200
+bytes long, or 512 in decimals. The two bytes after that tell us where the
+first text box can be found, which is 0x200 bytes offset from 0xa8800, or
+0x200 + 0xa8800 = 0xa8a00. The end of the pointer table in AREAD011.EMI
+is marked with a series of repeating 0x03F5's.
+
+
+            ========================================================
+                            2d. Editing text sections
+            ========================================================
+
+When reinserting files with CDMage, you *cannot* change the file's sizes.
+It needs to be reiterated that the game is highly redundant when it comes to
+certain strings. For example, battle victory messages appear in BATTLE.EMI,
+BATTLE2.EMI, and all *fifty-five* BOSSxxx.EMI files. To ensure that the
+modified string appears on every occasion, you have to change all of those
+files.
+
+=====================
+Item and spell names
+=====================
+
+Another major difference from BoFIII is in how item and spell names are
+stored. These are stored in INIT.EMI, separately from their actual data.
+Item and ability names are now limited to how much screen space they take
+instead of the 12-character limit. Each name ends with 0x00, and a pointer
+table above each category determines where each name is.
+
+
+
+[ENCD]--------------------------------------------------------------------------
+
+3. Encoding
+
+--------------------------------------------------------------------------------
+
+            ========================================================
+                               3a. ASCII encoding
+            ========================================================
+
+As with BoFIII, Latin characters and Arabic numerals are encoded using their
+ASCII codepoints. However, as a major step forward from BoFIII, almost all
+punctuations and the whitespace are now encoded using ASCII codepoints. There
+are some exceptions which are listed below:
+
+
+    Hexadecimal     Character 
+    ----------------------------
+    0x24            、
+    0x2a            X
+    0x3c            「
+    0x3e            」
+    0x40            ·
+    0x5b            ‥
+    0x5d            #
+    0x5e            ~
+    0x5f            Ƶ
+    0x60            Ⅳ        
+    0x7b            <
+    0x7c            °
+    0x7d            『
+    0x7e            』
+
+Some of these are used in the Japanese version, as described in the next 
+section.
+
+
+            ========================================================
+                          3b. Kanji and kana encoding
+            ========================================================
+
+Kana encoding is similar to BoFIII, just shifted by 3 bytes. Kanji encoding
+is a bit more complicated, as each AREA file has a different encoding. This is
+explained a bit more in the section 'Fonts'.
+
+Hiragana and katakana are encoded using a single byte, while kanji is encoded
+using two bytes. Kanji always start with either 0x12 or 0x13.
+
+    Range                       Type
+    ---------------------------------------
+    0x5e    -    0xad           Hiragana
+    0xae    -    0xfe           Katakana
+    0x1200  -    0x135c         Kanji
+
+The kanji range listed here is the range of kanji shared by all AREA files.
+0x135d and above may encode different kanji in different AREA files.
+
+The codepoints for Japanese punctuations correspond to their non-ideographic
+counterparts in ASCII. For example, the exclamation mark is 0x21. There are
+some exceptions which are listed below:
+
+    Hexadecimal     Character 
+    ----------------------------
+    0x23            。
+    0x24            、
+    0x2a            X
+    0x3c            「
+    0x3e            」
+    0x40            ·
+    0x5b            ‥
+    0x5d            ー
+
+For a complete encoding table of hiragana, katakana, and kanji, please refer to
+the table in the section 'Table of kanji and kana' ([JTABL]).
+
+
+            ========================================================
+                                  3c. Symbols
+            ========================================================
+
+There are several codepoints used to encode symbols used in the
+game's text. This includes the face buttons on a Playstation controller
+and in-game icons. Each of these icons have an associated color/palette
+code. See the subsubsection 'Colored text' for more info on colors.
+Here are the codepoints used to encode symbols in the US NTSC
+version:
+
+    Hexadecimal     Palette code    Character
+    -------------------------------------------------------
+    0x1500          0x0a            ◯
+    0x1501          0x0a            ×
+    0x1502          0x0a            △
+    0x1503          0x0a            □
+    0x1504          0x0d            ★
+    0x1546          0x0c            PWR icon
+    0x1547          0x0c            DEF icon
+    0x1548          0x0c            AGL icon
+    0x1549          0x0c            INT icon
+    0x154b          0x0d            Treasure ability icon
+    0x154c          0x0d            Breath icon
+    0x154d          0x0d            Status icon
+    0x154e          0x0d            Stat up icon 1
+    0x154f          0x0d            Stat up icon 2
+    0x1550          0x09            Stat down icon 1
+    0x1551          0x09?           Stat down icon 2
+    0x1552          0x0d            Death icon
+    0x1553          0x0d            Melee icon
+    0x1554          0x0e            Holy icon
+    0x1555          0x0d            Earth icon
+    0x1556          0x0d            Ice icon
+    0x1557          0x0d            Wind icon
+    0x1558          0x0d            Fire icon
+    0x1559          0x0d            Transformation icon
+    0x155a          0x0d            Combo icon
+    0x155c          0x0d            Item bag icon
+    0x155d          0x0d            Fish icon
+    0x155e          0x0e            Sword icon
+    0x155f          0x0e            Club icon
+    0x1560          0x0e            Gun icon
+    0x1561          0x0e            Staff icon
+    0x1562          0x0e            Breastplate icon
+    0x1563          0x0e            Cloth icon
+    0x1564          0x0e            Dress icon
+    0x1565          0x0e            Ring icon
+    0x1566          0x0e            Boots icon
+    0x1567          0x0e            Helm icon
+    0x1568          0x0e            Rod icon
+    0x1569          0x0e            Lure icon
+    0x156a          0x0c?           Zenny icon
+    0x156c          0x0e            Gloves icon
+    0x156f          --              ↙
+
+Here are the differences in the Japanese version:
+
+    Hexadecimal     Palette code    Character
+    -----------------------------------------------------
+    0x1504          --              Ƶ
+    0x1505          --              Ⅳ
+    0x1506          0x0d            ★
+    0x1507          --              >
+    0x1508          --              °
+    0x1509          --              『
+    0x150a          --              』          
+
+Weapon icons, the ring icon, and the cloth icon appear to use a different
+palette code from the US NTSC version.
+
+
+
+[CCHR]--------------------------------------------------------------------------
+
+4. Control characters
+
+--------------------------------------------------------------------------------
+
+            ========================================================
+                           4a. Main control characters
+            ========================================================
+
+Here are the control characters used to indicate the start, continuation,
+and end of a text box, timed box, box chain or a timed box chain:    
+
+    Hexadecimal         Function
+    ----------------------------------------------------------------------------
+    0x00                End of a text box, timed box chain, or a box chain,
+                        the next string is the start of a new text box.
+    0x0b                Pause, shown as a brief pause while
+                        the text is being typed.
+    0x02                End of a text box, continues the box chain.
+    0x16__              Start of a timed box, usually followed by
+                        other timed boxes to create a chain in
+                        certain cutscenes. The blanks are replaced with
+                        the duration of the timed box's appearance. 
+                        Compared to the durations in BoFIII, the durations
+                        are shorter.
+
+The position, visibility, and size of text boxes can be changed by placing
+0x0c__ at the start of the string, where the blanks are filled with the
+appropriate code.
+The first nibble of the blank byte indicates the style of the text box:
+
+    Hexadecimal         Effect
+    ----------------------------------------------------------------------------
+    0x0_                Normal textbox
+    0x2_                The screen is dimmed except for the textbox
+    0x4_                Smaller text box
+    0x8_                No background/border
+
+The second nibble indicates the position:
+
+    Hexadecimal     Position and Visibility                
+    -----------------------------------------
+    0x_0            Bottom - Mid
+    0x_1            Mid - Mid
+    0x_2            Top - Mid
+    0x_3            Top - Left
+    0x_4            Top - Right
+    0x_5            Bottom - Left
+    0x_6            Bottom - Right
+
+Sometimes text boxes prompt the user to select an option. The start of a list
+of options is marked with 0x14__0c__, where the first blank is the 'action' of
+the option box. The first nibble of the second blank determines the layout,
+while the second nibble determines the number of options to choose from.
+Here are the possible layouts:
+
+    Hexadecimal         Layout
+    ----------------------------------------------------------------------------
+    0x9_                Options are placed on a big text box above/below the
+                        main text box
+    0x8_                Options are placed on a small text box above/below the
+                        main text box
+    0x7_                Options are placed on the main text box itself
+
+Another change from BoFIII is the inclusion of character portraits next to
+the text box. This is used to indicate who's speaking and what emotions they
+are conveying. The default portraits of all 7 party members are always
+loaded in the VRAM, while NPC portraits and other party member portraits
+are determined by the AREA file.
+The code 0x17__ __ is used to add a portrait to the text box. It may be placed
+at the beginning of the text box or in the middle of a text box.
+The first blank is used to indicate which portrait is being displayed, with the
+first nibble indicating the category of portraits to choose from and the
+orientation, and the second nibble used to index the portrait within that
+category. The second blank used to determine the color palette and the
+placement of the portrait.
+If there are multiple portrait codes within the same text box with the same
+placement, the game will transition between portraits when it's reached the
+point where the portait code is located. Multiple portraits in the same textbox
+with different locations will be displayed simultaneously.
+Here are the possible options for the first blank:
+
+    Hexadecimal         Category                            Mirrored?
+    ----------------------------------------------------------------------------
+    0x0_                Area defined portraits              No
+    0x5_                Default party member portraits      No
+    0x8_                Area defined portraits              Yes
+    0xd_                Default party member portraits      Yes
+
+Party member portraits follow the party member numbering for the 0x04__ code, as described above.
+
+Here are the possible options for the second blank:
+
+    Hexadecimal         Location
+    ----------------------------------------------------------------------------
+    0x0_                Leftmost side of the text box
+    0x4_                Rightmost side of the textbox
+    0x8_                One portrait width away from the leftmost side
+    0xc_                One portrait width away from the rightmost side
+
+
+            ========================================================
+                                4b. Placeholders
+            ========================================================
+
+The names of party members are encoded as 0x04__, where the blanks are
+replaced with the appropriate code for the character's name.
+Here are the codes for the names of party members in English:
+
+    Hexadecimal         Name
+    -------------------------------------
+    0x00                Ryu
+    0x01                Nina
+    0x02                Cray
+    0x03                Scias
+    0x04                Ursula
+    0x05                Ershin
+    0x06                Fou-Lu
+
+And here are the names in Japanese:
+
+    Hexadecimal         Name
+    -------------------------------------
+    0x00                リュウ
+    0x01                ニーナ
+    0x02                クレイ
+    0x03                サイアス
+    0x04                アースラ
+    0x05                マスター
+    0x06                フォウル
+
+As in BoFIII, party member names can be changed in the Faerie Village. In the
+case where a default name is changed, using the codes above will encode the
+customized name instead of the default name. The default names can be found in
+SYSTEM/GAME.EMI and ETC/RTEST.EMI.
+Party member names are char[6], and if the length doesn't make it to 6
+characters, the remaining length is padded with 0x00.
+
+0x18__ __ is a placeholder which replaces the text box with another text box.
+
+0x07__ is a placeholder for certain values.
+
+0x03 displays the name of the current active protagonist. In BoFIV, the story
+switches between two characters: Ryu and Fou-Lu. When the current active 
+protagonist is Ryu, 0x03 will display "Ryu".
+
+
+            ========================================================
+                              4c. Text formatting
+            ========================================================
+
+The game has the ability to change the color of a text, change the size, and
+also add animation to a text.
+
+=============
+Colored text
+=============
+
+    The start of a colored text is indicated by 0x05__, where the blanks are
+    replaced with the appropriate color code, and the end of a colored text is
+    marked with 0x06. 
+    Here are the codes for the colors supported by the game:
+
+    Hexadecimal         Color
+    -----------------------------
+    0x01                Grey
+    0x02                Red
+    0x03                Cyan
+    0x04                Green
+    0x05                Pink
+    0x06                Yellow
+    0x07                Magenta
+    0x08                White
+
+    This can also be used to color icons with the correct palette. See 'Symbols'
+    for the list of icons and their corresponding palettes.
+
+    For example, to make the sentence 'Hello world' appear grey in the game,
+    the following hexadecimal code is used:
+
+    05 01 48 65 6c 6c 6f ff 57 6c 72 6c 64 06
+
+    Where:
+        - 05 01 is used to indicate the start of grey-colored text.
+        - 48 65 6c 6c 6f ff 57 6c 72 6c 64 06 is the string 'Hello world'
+          encoded in ASCII.
+        - 06 marks the end of the grey-colored text.
+
+    To make the ice icon appear with the correct color palette:
+
+    05 0d 15 56 06
+
+    Where:
+        - 05 0d is used to indicate the start of the text using the 0x0d
+          color palette.
+        - 15 56 is the codepoint used to encode the ice icon
+        - 06 marks the end of the text using the color palette.
+
+===============
+Text animation
+===============
+
+    The start of a text with animation is indicated by 0x0d. The end of such
+    a piece of text is marked with 0x0e0f__, where the blanks are replaced with
+    the appropriate effect code. The number of animation effects in BoFIV have
+    been greatly reduced compared to BoFIII.
+    Here are the codes for the text animation effects:
+
+    Hexadecimal         Effect          Persistent?
+    -------------------------------------------------
+    0x00                Shake           No
+    0x01                Shake           Yes
+    0x02                Big             No
+    0x03                Big             Yes
+    0x04                Bigger          No
+    0x05                Bigger          Yes
+    0x06                Small           No
+    0x07                Small           Yes
+    0x08                Wave ascend     No
+    0x09                Jump            -
+    0x0a                Big             No
+
+If the effect is persistent, it means that the text does not revert back to
+normal after the animation is finished.
+'Shake' shakes the text horizontally.
+'Big' scales the text to be bigger
+'Bigger' scales the text to be even bigger.
+'Small' shrinks the text.
+'Wave ascend' wiggles the text horizontally while moving it up and down.
+'Jump' causes the text to leap once.
+As a warning, 0x0b and above will crash the game.
+
+
+
+[FONT]--------------------------------------------------------------------------
+
+5. Fonts
+
+--------------------------------------------------------------------------------
+
+            ========================================================
+                              5a. Latin characters
+            ========================================================
+
+Latin characters use a VWF (variable width fonth), internally stored as 8x10
+tiles in INIT.EMI. The width of each character is stored in the RAM, somewhere
+around 0x80174418.
+
+
+            ========================================================
+                              5b. Kana and kanji
+            ========================================================
+
+Each kana and kanji is a 12x12 tile stored in INIT.EMI.
+The kanji table in INIT.EMI contains only the base 348 kanji used by the game.
+An AREA file has its own kanji table, which may include different sets of
+additional kanji. Hence, a 0x135f in an AREA file may not represent the same
+kanji in another AREA file.
+
+
+
+[JTBL]--------------------------------------------------------------------------
+
+6. Table of kanji and kana
+
+--------------------------------------------------------------------------------
+
+Note: This only applies to the Japanese version (SLPS-02728) of the game.
+
+
+            ========================================================
+                               6a. Hiragana table
+            ========================================================
+
+    Hexadecimal     Hiragana
+    ---------------------------
+    0x5e            あ
+    0x5f            い
+    0x60            う
+    0x61            え
+    0x62            お
+    0x63            か
+    0x64            き
+    0x65            く
+    0x66            け
+    0x67            こ
+    0x68            さ
+    0x69            し
+    0x6a            す
+    0x6b            せ
+    0x6c            そ
+    0x6d            た
+    0x6e            ち
+    0x6f            つ
+    0x70            て
+    0x71            と
+    0x72            な
+    0x73            に
+    0x74            ぬ
+    0x75            ね
+    0x76            の
+    0x77            は
+    0x78            ひ
+    0x79            ふ
+    0x7a            へ
+    0x7b            ほ
+    0x7c            ま
+    0x7d            み
+    0x7e            む
+    0x7f            め
+    0x80            も
+    0x81            や
+    0x82            ゆ
+    0x83            よ
+    0x84            ら
+    0x85            り
+    0x86            る
+    0x87            れ
+    0x88            ろ
+    0x89            わ
+    0x8a            を
+    0x8b            ん
+    0x8c            ぁ
+    0x8d            ぃ
+    0x8e            ぅ
+    0x8f            ぇ
+    0x90            ぉ
+    0x91            っ
+    0x92            ゃ
+    0x93            ゅ
+    0x94            ょ
+    0x95            が
+    0x96            ぎ
+    0x97            ぐ
+    0x98            げ
+    0x99            ご
+    0x9a            ざ
+    0x9b            じ
+    0x9c            ず
+    0x9d            ぜ
+    0x9e            ぞ
+    0x9f            だ
+    0xa0            ぢ
+    0xa1            づ
+    0xa2            で
+    0xa3            ど
+    0xa4            ば
+    0xa5            び
+    0xa6            ぶ
+    0xa7            べ
+    0xa8            ぼ
+    0xa9            ぱ
+    0xaa            ぴ
+    0xab            ぷ
+    0xac            ぺ
+    0xad            ぽ
+
+
+            ========================================================
+                               6b. Katakana table
+            ========================================================
+
+    Hexadecimal     Katakana
+    ---------------------------
+    0xae            ア
+    0xaf            イ
+    0xb0            ウ
+    0xb1            エ
+    0xb2            オ
+    0xb3            カ
+    0xb4            キ
+    0xb5            ク
+    0xb6            ケ
+    0xb7            コ
+    0xb8            サ
+    0xb9            シ
+    0xba            ス
+    0xbb            セ
+    0xbc            ソ
+    0xbd            タ
+    0xbe            チ
+    0xbf            ツ
+    0xc0            テ
+    0xc1            ト
+    0xc2            ナ
+    0xc3            ニ
+    0xc4            ヌ
+    0xc5            ネ
+    0xc6            ノ
+    0xc7            ハ
+    0xc8            ヒ
+    0xc9            フ
+    0xca            ヘ
+    0xcb            ホ
+    0xcc            マ
+    0xcd            ミ
+    0xce            ム
+    0xcf            メ
+    0xd0            モ
+    0xd1            ヤ
+    0xd2            ユ
+    0xd3            ヨ
+    0xd4            ラ
+    0xd5            リ
+    0xd6            ル
+    0xd7            レ
+    0xd8            ロ
+    0xd9            ワ
+    0xda            ヲ
+    0xdb            ン
+    0xdc            ァ
+    0xdd            ィ
+    0xde            ゥ
+    0xdf            ェ
+    0xe0            ォ
+    0xe1            ッ
+    0xe2            ャ
+    0xe3            ュ
+    0xe4            ョ
+    0xe5            ガ
+    0xe6            ギ
+    0xe7            グ
+    0xe8            ゲ
+    0xe9            ゴ
+    0xea            ザ
+    0xeb            ジ
+    0xec            ズ
+    0xed            ゼ
+    0xee            ゾ
+    0xef            ダ
+    0xf0            ヂ
+    0xf1            ヅ
+    0xf2            デ
+    0xf3            ド
+    0xf4            バ
+    0xf5            ビ
+    0xf6            ブ
+    0xf7            ベ
+    0xf8            ボ
+    0xf9            パ
+    0xfa            ピ
+    0xfb            プ
+    0xfc            ペ
+    0xfd            ポ
+    0xfe            ヴ
+
+
+            ========================================================
+                                6c. Kanji table
+            ========================================================
+
+    Hexadecimal     Kanji
+    ---------------------------
+    0x1200          中
+    0x1201          大
+    0x1202          砂
+    0x1203          嵐
+    0x1204          泥
+    0x1205          流
+    0x1206          回
+    0x1207          復
+    0x1208          天
+    0x1209          光
+    0x120a          海
+    0x120b          特
+    0x120c          異
+    0x120d          点
+    0x120e          最
+    0x120f          防
+    0x1210          御
+    0x1211          変
+    0x1212          身
+    0x1213          銃
+    0x1214          王
+    0x1215          夢
+    0x1216          神
+    0x1217          業
+    0x1218          火
+    0x1219          拳
+    0x121a          鳥
+    0x121b          斬
+    0x121c          滅
+    0x121d          殺
+    0x121e          毒
+    0x121f          撃
+    0x1220          気
+    0x1221          合
+    0x1222          魔
+    0x1223          法
+    0x1224          陣
+    0x1225          結
+    0x1226          界
+    0x1227          連
+    0x1228          草
+    0x1229          烈
+    0x122a          風
+    0x122b          氷
+    0x122c          逆
+    0x122d          転
+    0x122e          邪
+    0x122f          呪
+    0x1230          爆
+    0x1231          自
+    0x1232          炎
+    0x1233          立
+    0x1234          羅
+    0x1235          牙
+    0x1236          波
+    0x1237          水
+    0x1238          破
+    0x1239          土
+    0x123a          地
+    0x123b          絶
+    0x123c          命
+    0x123d          剣
+    0x123e          曲
+    0x123f          薬
+    0x1240          純
+    0x1241          元
+    0x1242          玉
+    0x1243          成
+    0x1244          思
+    0x1245          必
+    0x1246          射
+    0x1247          門
+    0x1248          鍵
+    0x1249          超
+    0x124a          木
+    0x124b          実
+    0x124c          知
+    0x124d          力
+    0x124e          種
+    0x124f          消
+    0x1250          目
+    0x1251          頭
+    0x1252          真
+    0x1253          空
+    0x1254          雷
+    0x1255          弾
+    0x1256          攻
+    0x1257          竜
+    0x1258          勝
+    0x1259          魚
+    0x125a          鉄
+    0x125b          素
+    0x125c          家
+    0x125d          刀
+    0x125e          皇
+    0x125f          帝
+    0x1260          太
+    0x1261          馬
+    0x1262          霸
+    0x1263          杖
+    0x1264          放
+    0x1265          多
+    0x1266          発
+    0x1267          散
+    0x1268          上
+    0x1269          筒
+    0x126a          石
+    0x126b          矢
+    0x126c          飛
+    0x126d          皮
+    0x126e          賢
+    0x126f          者
+    0x1270          使
+    0x1271          愛
+    0x1272          女
+    0x1273          初
+    0x1274          心
+    0x1275          能
+    0x1276          装
+    0x1277          備
+    0x1278          状
+    0x1279          態
+    0x127a          並
+    0x127b          設
+    0x127c          定
+    0x127d          用
+    0x127e          整
+    0x127f          理
+    0x1280          見
+    0x1281          捨
+    0x1282          宝
+    0x1283          事
+    0x1284          誰
+    0x1285          選
+    0x1286          移
+    0x1287          動
+    0x1288          決
+    0x1289          後
+    0x128a          場
+    0x128b          所
+    0x128c          本
+    0x128d          当
+    0x128e          良
+    0x128f          戻
+    0x1290          向
+    0x1291          左
+    0x1292          右
+    0x1293          切
+    0x1294          強
+    0x1295          早
+    0x1296          別
+    0x1297          効
+    0x1298          果
+    0x1299          無
+    0x129a          視
+    0x129b          期
+    0x129c          化
+    0x129d          振
+    0x129e          機
+    0x129f          現
+    0x12a0          在
+    0x12a1          画
+    0x12a2          面
+    0x12a3          調
+    0x12a4          楽
+    0x12a5          押
+    0x12a6          走
+    0x12a7          步
+    0x12a8          下
+    0x12a9          全
+    0x12aa          分
+    0x12ab          通
+    0x12ac          常
+    0x12ad          戦
+    0x12ae          闘
+    0x12af          類
+    0x12b0          武
+    0x12b1          器
+    0x12b2          具
+    0x12b3          道
+    0x12b4          物
+    0x12b5          術
+    0x12b6          会
+    0x12b7          話
+    0x12b8          終
+    0x12b9          了
+    0x12ba          択
+    0x12bb          前
+    0x12bc          可
+    0x12bd          入
+    0x12be          先
+    0x12bf          要
+    0x12c0          一
+    0x12c1          不
+    0x12c2          新
+    0x12c3          品
+    0x12c4          買
+    0x12c5          売
+    0x12c6          取
+    0x12c7          持
+    0x12c8          数
+    0x12c9          以
+    0x12ca          足
+    0x12cb          出
+    0x12cc          行
+    0x12cd          何
+    0x12ce          手
+    0x12cf          拾
+    0x12d0          宿
+    0x12d1          屋
+    0x12d2          単
+    0x12d3          体
+    0x12d4          属
+    0x12d5          性
+    0x12d6          聖
+    0x12d7          残
+    0x12d8          小
+    0x12d9          重
+    0x12da          旅
+    0x12db          度
+    0x12dc          生
+    0x12dd          率
+    0x12de          人
+    0x12df          高
+    0x12e0          長
+    0x12e1          店
+    0x12e2          子
+    0x12e3          国
+    0x12e4          突
+    0x12e5          注
+    0x12e6          意
+    0x12e7          敵
+    0x12e8          死
+    0x12e9          質
+    0x12ea          反
+    0x12eb          応
+    0x12ec          金
+    0x12ed          秘
+    0x12ee          倍
+    0x12ef          精
+    0x12f0          守
+    0x12f1          名
+    0x12f2          音
+    0x12f3          弱
+    0x12f4          時
+    0x12f5          開
+    0x12f6          対
+    0x12f7          威
+    0x12f8          伝
+    0x12f9          說
+    0x12fa          味
+    0x12fb          世
+    0x12fc          着
+    0x12fd          感
+    0x12fe          師
+    0x12ff          翼
+    0x1300          族
+    0x1301          軍
+    0x1302          密
+    0x1303          間
+    0x1304          受
+    0x1305          安
+    0x1306          漠
+    0x1307          然
+    0x1308          衛
+    0x1309          休
+    0x130a          加
+    0x130b          速
+    0x130c          代
+    0x130d          返
+    0x130e          村
+    0x130f          悪
+    0x1310          放
+    0x1311          同
+    0x1312          利
+    0x1313          我
+    0x1314          減
+    0x1315          作
+    0x1316          壊
+    0x1317          岩
+    0x1318          樹
+    0x1319          投
+    0x131a          避
+    0x131b          置
+    0x131c          部
+    0x131d          暴
+    0x131e          船
+    0x131f          名
+    0x1320          匠
+    0x1321          仲
+    0x1322          痛
+    0x1323          根
+    0x1324          由
+    0x1325          逃
+    0x1326          文
+    0x1327          字
+    0x1328          色
+    0x1329          制
+    0x132a          恨
+    0x132b          抜
+    0x132c          正
+    0x132d          書
+    0x132e          黒
+    0x132f          技
+    0x1330          鬼
+    0x1331          的
+    0x1332          次
+    0x1333          活
+    0x1334          狩
+    0x1335          二
+    0x1336          様
+    0x1337          港
+    0x1338          南
+    0x1339          島
+    0x133a          西
+    0x133b          陸
+    0x133c          救
+    0x133d          都
+    0x133e          妖
+    0x133f          星
+    0x1340          千
+    0x1341          保
+    0x1342          険
+    0x1343          町
+    0x1344          基
+    0x1345          山
+    0x1346          里
+    0x1347          央
+    0x1348          半
+    0x1349          北
+    0x134a          諸
+    0x134b          黄
+    0x134c          平
+    0x134d          野
+    0x134e          未
+    0x134f          来
+    0x1350          与
+    0x1351          達
+    0x1352          成
+    0x1353          刹
+    0x1354          関
+    0x1355          教
+    0x1356          老
+    0x1357          差
+    0x1358          込
+    0x1359          口
+    0x135a          承
+    0x135b          隊
+    0x135c          晶
+
+0x135e and above are dependent entirely on the AREA file.
+
+
+
+[CHNG]--------------------------------------------------------------------------
+
+7. Changelog
+
+--------------------------------------------------------------------------------
+
+(2021/10/14) v1.0: Start of writing
+(2021/10/15) v1.0: Finished writing
+(2021/10/17) v1.1: Added some more symbols and information about portraits,
+                   and corrected some errors
+(2021/10/18) v1.2: Added more info on placeholders
+(2021/11/04) v1.2: Fixed Kanji
+(2021/11/06) v1.3: Updated information on pointers
